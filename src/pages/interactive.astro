@@ -1,0 +1,96 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Link from '../components/ui/link.astro';
+import { getEpisodesOrder, getEpisodeDetails } from '../utils/content';
+
+const slugs = await getEpisodesOrder();
+const episodes = (await Promise.all(
+    slugs.map(async (slug) => await getEpisodeDetails(slug))
+)).filter((episode): episode is NonNullable<typeof episode> => episode !== null);
+---
+
+<Layout
+	title="یادگیری تعاملی | مرا به فکر وادار نکن!"
+	description="یادگیری تعاملی اصول طراحی تجربه‌ی کاربری با تمرین‌های عملی"
+>
+<article class="container flex flex-col items-center gap-8">
+        <!-- Main Card -->
+        <div class="max-w-4xl relative w-full p-12 bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl overflow-hidden group">
+            <!-- Background Pattern -->
+            <div class="absolute inset-0 opacity-10">
+                <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                        <path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" stroke-width="0.5"/>
+                    </pattern>
+                    <rect width="100" height="100" fill="url(#grid)" />
+                </svg>
+            </div>
+
+            <!-- Content -->
+            <div class="relative text-center text-white space-y-8">
+                <h1 class="text-4xl font-bold">یادگیری تعاملی</h1>
+                <p class="text-xl text-gray-300">
+                    با تمرین‌های عملی و مثال‌های واقعی، اصول طراحی تجربه‌ی کاربری را یاد بگیرید.
+                </p>
+                <Link 
+                    href="/interactive/play"
+                    class="inline-flex items-center justify-center gap-3 bg-white text-gray-900 hover:bg-gray-100 px-8 py-4 rounded-full font-medium transition-colors"
+                >
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    شروع یادگیری
+                </Link>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Steps -->
+            <div class="p-6 bg-white border border-gray-200 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">مراحل گذرانده شده</p>
+                        <p class="text-2xl font-bold">۰</p>
+                    </div>
+                    <div class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Time -->
+            <div class="p-6 bg-white border border-gray-200 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">زمان صرف شده</p>
+                        <p class="text-2xl font-bold">۰ دقیقه</p>
+                    </div>
+                    <div class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mood -->
+            <div class="p-6 bg-white border border-gray-200 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">حال و هوا</p>
+                        <p class="text-2xl font-bold text-green-600">عالی</p>
+                    </div>
+                    <div class="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+</article>
+</Layout> 

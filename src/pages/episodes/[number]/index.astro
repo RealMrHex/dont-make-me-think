@@ -2,6 +2,7 @@
 import Layout from '../../../layouts/Layout.astro';
 import Link from '../../../components/ui/link.astro';
 import { getEpisodesOrder, getEpisodeDetails, getAllTopicsForEpisode } from '../../../utils/content';
+import { isEpisodeUnlocked, isTopicCompleted, isEpisodeCompleted } from '../../../utils/progress';
 import type { GetStaticPaths } from 'astro';
 
 export const getStaticPaths = (async () => {
@@ -13,11 +14,25 @@ const { number } = Astro.params;
 const episode = await getEpisodeDetails(number);
 const topics = await getAllTopicsForEpisode(number);
 
-console.log('Episode:', number);
-console.log('Topics:', topics);
+// Clear previous console logs in dev mode
+if (import.meta.env.DEV) {
+    console.clear();
+    console.log('=== Episode Page Debug ===');
+    console.log('Episode:', number);
+    console.log('Status:', episode?.status);
+    console.log('Is Unlocked:', isEpisodeUnlocked(number));
+    console.log('------------------------');
+}
 
-// Redirect if episode is not found or not published
-if (!episode || episode.status !== 'published') {
+// Redirect if episode is not found, not published, or locked
+if (!episode || episode.status !== 'published' || !isEpisodeUnlocked(number)) {
+    if (import.meta.env.DEV) {
+        console.log('Redirecting because:');
+        console.log('- Episode exists:', !!episode);
+        console.log('- Is published:', episode?.status === 'published');
+        console.log('- Is unlocked:', isEpisodeUnlocked(number));
+        console.log('------------------------');
+    }
     return Astro.redirect('/episodes');
 }
 
@@ -29,6 +44,15 @@ const nextSlug = currentIndex < slugs.length - 1 ? slugs[currentIndex + 1] : nul
 
 const prevEpisode = prevSlug ? await getEpisodeDetails(prevSlug) : null;
 const nextEpisode = nextSlug ? await getEpisodeDetails(nextSlug) : null;
+
+// Get completion status for each topic
+const isFirstEpisode = number === 'intro';
+const topicsWithStatus = topics.map((topic, index) => ({
+    ...topic,
+    isCompleted: isTopicCompleted(number, topic.slug),
+    isAccessible: (isFirstEpisode && index === 0) || // First topic of first episode
+                 (index === 0 || isTopicCompleted(number, topics[index - 1].slug)) // Other topics
+}));
 ---
 
 <Layout 
@@ -84,13 +108,61 @@ const nextEpisode = nextSlug ? await getEpisodeDetails(nextSlug) : null;
             <div class="space-y-8" transition:animate="fade">
                 <h2 class="text-2xl font-bold">مطالب این فصل</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {topics.map((topic) => (
-                        <Link 
-                            href={`/episodes/${number}/${topic.slug}`}
-                            class="block group"
-                        >
-                            <article class="h-full p-6 border border-gray-200 rounded-lg transition-all duration-200 hover:border-gray-300 hover:shadow-sm bg-white">
-                                <h3 class="text-xl font-bold mb-3 group-hover:text-gray-700">
+                    {topicsWithStatus.map((topic) => (
+                        topic.isAccessible ? (
+                            <Link 
+                                href={`/episodes/${number}/${topic.slug}`}
+                                class="block group"
+                            >
+                                <article class:list={[
+                                    "h-full p-6 border rounded-lg transition-all duration-200 hover:shadow-sm bg-white",
+                                    topic.isCompleted ? "border-green-200 hover:border-green-300" : "border-gray-200 hover:border-gray-300"
+                                ]}>
+                                    <h3 class="text-xl font-bold mb-3 group-hover:text-gray-700">
+                                        {topic.title}
+                                    </h3>
+                                    <p class="text-gray-600 mb-4">
+                                        {topic.description}
+                                    </p>
+                                    <div class="flex items-center gap-2 text-sm text-gray-500">
+                                        {topic.isInteractive ? (
+                                            <span class="inline-flex items-center gap-1.5">
+                                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                تعاملی
+                                            </span>
+                                        ) : (
+                                            <span class="inline-flex items-center gap-1.5">
+                                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                                </svg>
+                                                ایستا
+                                            </span>
+                                        )}
+                                        {topic.isCompleted && (
+                                            <span class="inline-flex items-center gap-1.5 text-green-600">
+                                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                تکمیل شده
+                                            </span>
+                                        )}
+                                    </div>
+                                </article>
+                            </Link>
+                        ) : (
+                            <article class="h-full p-6 border border-gray-200 rounded-lg bg-white/50 opacity-75 relative overflow-hidden">
+                                <div class="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+                                    <span class="inline-flex items-center gap-2 text-gray-500">
+                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                        قفل شده
+                                    </span>
+                                </div>
+                                <h3 class="text-xl font-bold mb-3">
                                     {topic.title}
                                 </h3>
                                 <p class="text-gray-600 mb-4">
@@ -115,7 +187,7 @@ const nextEpisode = nextSlug ? await getEpisodeDetails(nextSlug) : null;
                                     )}
                                 </div>
                             </article>
-                        </Link>
+                        )
                     ))}
                 </div>
             </div>
@@ -147,20 +219,33 @@ const nextEpisode = nextSlug ? await getEpisodeDetails(nextSlug) : null;
                 </div>
                 <div class="flex-1 flex items-center justify-end">
                     {nextEpisode?.status === 'published' ? (
-                        <Link 
-                            href={`/episodes/${nextSlug}`} 
-                            variant="muted"
-                            class="flex items-center gap-2 group text-left"
-                            transition:name={`episode-${nextSlug}`}
-                        >
-                            <div class="flex flex-col items-end">
-                                <span class="text-sm text-gray-500">فصل بعدی</span>
-                                <span>{nextEpisode.title}</span>
-                            </div>
-                            <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </Link>
+                        <div class="flex flex-col items-end gap-2">
+                            <Link 
+                                href={`/episodes/${nextSlug}`} 
+                                variant="muted"
+                                class:list={[
+                                    "flex items-center gap-2 group text-left",
+                                    !isEpisodeCompleted(number, episode.topicsCount) && "pointer-events-none opacity-50"
+                                ]}
+                                transition:name={`episode-${nextSlug}`}
+                            >
+                                <div class="flex flex-col items-end">
+                                    <span class="text-sm text-gray-500">فصل بعدی</span>
+                                    <span>{nextEpisode.title}</span>
+                                </div>
+                                <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </Link>
+                            {!isEpisodeCompleted(number, episode.topicsCount) && (
+                                <div class="text-xs text-red-600 flex items-center gap-1.5">
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                    برای دسترسی به مطالب بعدی باید در حالت تکاملی یادگیری را ادامه دهید
+                                </div>
+                            )}
+                        </div>
                     ) : (
                         <div></div>
                     )}

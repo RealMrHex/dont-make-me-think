@@ -1,0 +1,66 @@
+---
+import PlayLayout from '../../layouts/PlayLayout.astro';
+import Link from '../../components/ui/link.astro';
+import { getEpisodesOrder, getEpisodeDetails, getAllTopicsForEpisode } from '../../utils/content';
+
+// For now, we'll just get the first episode and its first topic
+const slugs = await getEpisodesOrder();
+const firstEpisode = await getEpisodeDetails(slugs[0]);
+const topics = firstEpisode ? await getAllTopicsForEpisode(slugs[0]) : [];
+const firstTopic = topics[0];
+---
+
+<PlayLayout>
+    <div class="relative h-svh flex">
+        <!-- Sidebar -->
+        <aside class="w-16 bg-white border-l border-gray-100 flex flex-col items-center py-4">
+            <Link 
+                href="/interactive"
+                class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-50 text-gray-600"
+                aria-label="بازگشت به صفحه‌ی اصلی"
+            >
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </Link>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col">
+            <!-- Top Bar -->
+            <div class="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6">
+                <div class="flex items-center gap-2">
+                    <h1 class="text-lg font-bold">{firstEpisode?.title}</h1>
+                    <span class="text-gray-300">/</span>
+                    <span class="text-gray-600">{firstTopic?.title}</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm text-gray-500">پیشرفت: ۰٪</span>
+                    <div class="w-32 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div class="w-0 h-full bg-gray-900 rounded-full"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="flex-1 p-8">
+                {firstTopic ? (
+                    <div class="max-w-3xl mx-auto">
+                        <h2 class="text-2xl font-bold mb-4">{firstTopic.title}</h2>
+                        <p class="text-gray-600 mb-8">{firstTopic.description}</p>
+                        <div class="prose prose-lg prose-gray max-w-none">
+                            <!-- Topic content will be rendered here -->
+                            <div class="text-center text-gray-500">
+                                محتوای تعاملی اینجا نمایش داده خواهد شد...
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div class="text-center text-gray-500">
+                        هیچ محتوایی برای نمایش وجود ندارد.
+                    </div>
+                )}
+            </div>
+        </div>
+    </div>
+</PlayLayout> 

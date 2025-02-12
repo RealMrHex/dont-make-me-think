@@ -2,6 +2,7 @@
 import Layout from '../../../layouts/Layout.astro';
 import Link from '../../../components/ui/link.astro';
 import { getEpisodesOrder, getEpisodeDetails, getTopicDetails, getAllTopicsForEpisode, getTopicComponent, getNextItem, getPrevItem, getNavigationLabel, getNavigationUrl } from '../../../utils/content';
+import { markTopicCompleted, unlockNextEpisode, isEpisodeCompleted, isEpisodeUnlocked, isTopicCompleted } from '../../../utils/progress';
 import type { GetStaticPaths } from 'astro';
 
 export const getStaticPaths = (async () => {
@@ -19,7 +20,11 @@ export const getStaticPaths = (async () => {
                     number: episodeSlug,
                     topic: topic.slug 
                 },
-                props: { episode, topic }
+                props: { 
+                    episode, 
+                    topic,
+                    allTopics: topics
+                }
             });
         }
     }
@@ -28,13 +33,48 @@ export const getStaticPaths = (async () => {
 }) satisfies GetStaticPaths;
 
 const { number, topic: topicSlug } = Astro.params;
-const { episode, topic } = Astro.props;
+const { episode, topic, allTopics } = Astro.props;
+
+// Debug logging in dev mode
+if (import.meta.env.DEV) {
+    console.log('=== Topic Page Debug ===');
+    console.log('Episode:', number);
+    console.log('Topic:', topicSlug);
+    console.log('Is Episode Unlocked:', isEpisodeUnlocked(number));
+    
+    // Find topic index and check accessibility
+    const topicIndex = allTopics.findIndex(t => t.slug === topicSlug);
+    const isFirstTopic = topicIndex === 0;
+    const prevTopicCompleted = topicIndex > 0 ? isTopicCompleted(number, allTopics[topicIndex - 1].slug) : true;
+    const isAccessible = isFirstTopic || prevTopicCompleted;
+    
+    console.log('Topic Index:', topicIndex);
+    console.log('Is First Topic:', isFirstTopic);
+    console.log('Previous Topic Completed:', prevTopicCompleted);
+    console.log('Is Topic Accessible:', isAccessible);
+    console.log('------------------------');
+}
+
+// Check if episode is unlocked and topic is accessible
+const topicIndex = allTopics.findIndex(t => t.slug === topicSlug);
+const isFirstTopic = topicIndex === 0;
+const prevTopicCompleted = topicIndex > 0 ? isTopicCompleted(number, allTopics[topicIndex - 1].slug) : true;
+const isAccessible = isFirstTopic || prevTopicCompleted;
+
+// Redirect if episode is not unlocked or topic is not accessible
+if (!isEpisodeUnlocked(number) || !isAccessible) {
+    return Astro.redirect('/episodes');
+}
 
 // Get next and previous items
 const nextItem = await getNextItem(number, topicSlug);
 const prevItem = await getPrevItem(number, topicSlug);
 
 const TopicComponent = (await getTopicComponent(number, topicSlug))?.default;
+
+const currentPath = `/episodes/${number}/${topicSlug}`;
+
+// Remove client-side function references
 ---
 
 <Layout 
@@ -97,19 +137,32 @@ const TopicComponent = (await getTopicComponent(number, topicSlug))?.default;
                 </div>
                 <div class="flex-1 flex items-center justify-end">
                     {nextItem && (
-                        <Link 
-                            href={getNavigationUrl(nextItem)}
-                            variant="muted"
-                            class="flex items-center gap-2 group text-left"
-                        >
-                            <div class="flex flex-col items-end">
-                                <span class="text-sm text-gray-500">{getNavigationLabel(nextItem, 'next')}</span>
-                                <span>{nextItem.title}</span>
-                            </div>
-                            <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </Link>
+                        <div class="flex flex-col items-end gap-2">
+                            <Link 
+                                href={getNavigationUrl(nextItem)}
+                                variant="muted"
+                                class:list={[
+                                    "flex items-center gap-2 group text-left",
+                                    !isTopicCompleted(number, topicSlug) && "pointer-events-none opacity-50"
+                                ]}
+                            >
+                                <div class="flex flex-col items-end">
+                                    <span class="text-sm text-gray-500">{getNavigationLabel(nextItem, 'next')}</span>
+                                    <span>{nextItem.title}</span>
+                                </div>
+                                <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </Link>
+                            {!isTopicCompleted(number, topicSlug) && (
+                                <div class="text-xs text-red-600 flex items-center gap-1.5">
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                    برای دسترسی به مطالب بعدی باید در حالت تکاملی یادگیری را ادامه دهید
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
             </nav>

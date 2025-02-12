@@ -1,29 +1,19 @@
 ---
 import Link from '../ui/link.astro';
-
-const navLinks = [
-    { href: "/episodes", text: "فصل‌ها" },
-    { href: "/about", text: "درباره" },
-];
 ---
 
 <header class="flex items-center justify-center border-b border-gray-100">
     <nav class="container py-6 flex items-center justify-between">
         <Link href="/" variant="default" class="text-xl font-medium">
-            نذار فکر کنم!
+            مرا به فکر وادار نکن!
         </Link>
         
-        <ul class="flex items-center gap-8">
-            {navLinks.map(link => (
-                <li>
-                    <Link 
-                        href={link.href} 
-                        variant="muted"
-                    >
-                        {link.text}
-                    </Link>
-                </li>
-            ))}
-        </ul>
+        <Link 
+            href="/interactive"
+            variant="button"
+            class="bg-gray-900 hover:bg-gray-800"
+        >
+            ادامه یادگیری
+        </Link>
     </nav>
 </header> 

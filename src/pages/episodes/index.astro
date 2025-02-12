@@ -7,6 +7,19 @@ const slugs = await getEpisodesOrder();
 const episodes = (await Promise.all(
     slugs.map(async (slug) => await getEpisodeDetails(slug))
 )).filter((episode): episode is NonNullable<typeof episode> => episode !== null);
+
+// Clear previous console logs in dev mode
+if (import.meta.env.DEV) {
+    console.clear();
+    console.log('=== Episode List Debug Info ===');
+    episodes.forEach(episode => {
+        console.log(`Episode: ${episode.slug}`);
+        console.log(`- Title: ${episode.title}`);
+        console.log(`- Status: ${episode.status}`);
+        console.log(`- Topics: ${episode.topicsCount}`);
+        console.log('------------------------');
+    });
+}
 ---
 
 <Layout 
@@ -28,4 +41,14 @@ const episodes = (await Promise.all(
             ))}
         </div>
     </div>
-</Layout> 
+</Layout>
+
+<script>
+    // Add client-side debug logging
+    if (import.meta.env.DEV) {
+        const progress = localStorage.getItem('user_progress');
+        console.log('=== LocalStorage Debug Info ===');
+        console.log('User Progress:', progress ? JSON.parse(progress) : 'Not found');
+        console.log('------------------------');
+    }
+</script> 

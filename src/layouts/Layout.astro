@@ -5,6 +5,7 @@ import { ClientRouter } from 'astro:transitions';
 import Header from '../components/header/index.astro';
 import Footer from '../components/footer/index.astro';
 import CookieBanner from '../components/cookie-banner/index.astro';
+import Link from '../components/ui/link.astro';
 
 interface Props {
 	title?: string;
@@ -17,6 +18,8 @@ const {
 	description = "آموزش بصری کتاب «مرا به فکر وادار نکن» به زبان ساده",
 	image = "/favicon.svg"
 } = Astro.props;
+
+const isDev = import.meta.env.DEV;
 ---
 
 <!doctype html>
@@ -67,11 +70,34 @@ const {
 			class="py-6 app flex-grow flex flex-col items-center"
 			transition:animate="slide"
 		>
-			<div transition:animate="fade">
+			<div class="w-full flex flex-col items-center" transition:animate="fade">
 				<slot />
 			</div>
 		</main>
 		<Footer transition:persist transition:name="footer" />
 		<CookieBanner transition:persist transition:name="cookie-banner" />
+
+		{isDev && (
+			<button
+				id="debug-reset"
+				class="fixed bottom-4 left-4 px-4 py-2 bg-red-600 text-white rounded-lg shadow-lg hover:bg-red-700 transition-colors z-50 text-sm font-medium"
+				title="Reset all progress and activity data"
+			>
+				Reset Data
+			</button>
+		)}
 	</body>
 </html>
+
+<script>
+	// Only include in development
+	if (import.meta.env.DEV) {
+		document.getElementById('debug-reset')?.addEventListener('click', () => {
+			// Clear all localStorage data
+			localStorage.clear();
+			
+			// Reload the page to reinitialize everything
+			window.location.reload();
+		});
+	}
+</script>
