@@ -1,0 +1,31 @@
+@layer utilities {
+    .container {
+      width: 100%;
+      padding-inline: 1rem;  /* Mobile default */
+      max-width: 90rem;      /* ~1440px */
+    }
+  
+    @media (min-width: 640px) {
+      .container {
+        padding-inline: 1.5rem;
+      }
+    }
+  
+    @media (min-width: 768px) {
+      .container {
+        padding-inline: 2rem;
+      }
+    }
+  
+    @media (min-width: 1024px) {
+      .container {
+        padding-inline: 2.5rem;
+      }
+    }
+  
+    @media (min-width: 1280px) {
+      .container {
+        padding-inline: 3rem;
+      }
+    }
+  }

@@ -1,0 +1,50 @@
+---
+interface Props {
+    href: string;
+    variant?: 'default' | 'muted' | 'underline' | 'button';
+    size?: 'sm' | 'md' | 'lg';
+    class?: string;
+    external?: boolean;
+}
+
+const {
+    href,
+    variant = 'default',
+    size = 'md',
+    class: className,
+    external = false,
+    ...rest
+} = Astro.props;
+
+const variants = {
+    default: 'text-gray-900 hover:text-gray-700',
+    muted: 'text-gray-600 hover:text-gray-900 hover:underline',
+    underline: 'text-gray-900 hover:text-gray-700 underline underline-offset-4',
+    button: 'inline-flex items-center justify-center rounded-md bg-gray-900 text-white hover:bg-gray-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-2'
+};
+
+const sizes = {
+    sm: variant === 'button' ? 'px-3 py-1.5 text-sm' : 'text-sm',
+    md: variant === 'button' ? 'px-4 py-2' : 'text-base',
+    lg: variant === 'button' ? 'px-6 py-3 text-lg' : 'text-lg'
+};
+
+const externalProps = external ? {
+    target: "_blank",
+    rel: "noopener noreferrer"
+} : {};
+---
+
+<a
+    href={href}
+    class:list={[
+        'transition-colors',
+        variants[variant],
+        sizes[size],
+        className
+    ]}
+    {...externalProps}
+    {...rest}
+>
+    <slot />
+</a> 

@@ -1,0 +1,109 @@
+@font-face {
+  font-family: 'Ravi';
+  src: url('/fonts/ravi-vf.ttf') format('truetype-variations');
+  font-weight: 100 900;
+  font-display: swap;
+  font-feature-settings: "kern" on, "ss01" on;
+}
+
+:root {
+  --font-ravi: 'Ravi', system-ui, sans-serif;
+}
+
+/* RTL and Persian specific styles */
+html, body {
+  font-family: var(--font-ravi);
+  font-feature-settings: "ss01" on;
+}
+
+
+/* Base font settings */
+.font-ravi {
+  font-family: var(--font-ravi) ;
+}
+
+/* OpenType Feature Classes */
+/* Stylistic Sets */
+.ss01 {
+  /* Persian/Arabic numerals */
+  font-feature-settings: "ss01" on;
+}
+
+.ss02 {
+  /* Kaf Swash alternates */
+  font-feature-settings: "ss02" on;
+}
+
+.ss03 {
+  /* Reversed Yeh */
+  font-feature-settings: "ss03" on;
+}
+
+.ss04 {
+  /* Lam-alef ligatures */
+  font-feature-settings: "ss04" on;
+}
+
+/* Swash alternates */
+.swsh {
+  font-feature-settings: "swsh" on;
+}
+
+/* Stylistic alternates */
+.salt {
+  font-feature-settings: "salt" on;
+}
+
+/* Discretionary ligatures */
+.dlig {
+  font-feature-settings: "dlig" on;
+}
+
+/* Number spacing variants */
+.proportional-nums {
+  font-feature-settings: "pnum" on;
+}
+
+.tabular-nums {
+  font-feature-settings: "tnum" on;
+}
+
+/* Multiple features */
+.all-features {
+  font-feature-settings: "kern" on, "ss01" on, "ss02" on, "ss03" on, "ss04" on, 
+                        "swsh" on, "salt" on, "dlig" on;
+}
+
+/* Weight variations */
+.font-thin {
+  font-variation-settings: 'wght' 100;
+}
+
+.font-light {
+  font-variation-settings: 'wght' 300;
+}
+
+.font-regular {
+  font-variation-settings: 'wght' 400;
+}
+
+.font-medium {
+  font-variation-settings: 'wght' 500;
+}
+
+.font-bold {
+  font-variation-settings: 'wght' 700;
+}
+
+.font-black {
+  font-variation-settings: 'wght' 900;
+}
+
+/* Animated weight */
+.animate-weight {
+  transition: font-variation-settings 0.3s ease;
+}
+
+.animate-weight:hover {
+  font-variation-settings: 'wght' 700;
+} 
