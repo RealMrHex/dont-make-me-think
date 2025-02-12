@@ -1,0 +1,171 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Link from '../../../components/ui/link.astro';
+import { getEpisodesOrder, getEpisodeDetails, getAllTopicsForEpisode } from '../../../utils/content';
+import type { GetStaticPaths } from 'astro';
+
+export const getStaticPaths = (async () => {
+    const slugs = await getEpisodesOrder();
+    return slugs.map(slug => ({ params: { number: slug } }));
+}) satisfies GetStaticPaths;
+
+const { number } = Astro.params;
+const episode = await getEpisodeDetails(number);
+const topics = await getAllTopicsForEpisode(number);
+
+console.log('Episode:', number);
+console.log('Topics:', topics);
+
+// Redirect if episode is not found or not published
+if (!episode || episode.status !== 'published') {
+    return Astro.redirect('/episodes');
+}
+
+// Find previous and next episodes
+const slugs = await getEpisodesOrder();
+const currentIndex = slugs.indexOf(number);
+const prevSlug = currentIndex > 0 ? slugs[currentIndex - 1] : null;
+const nextSlug = currentIndex < slugs.length - 1 ? slugs[currentIndex + 1] : null;
+
+const prevEpisode = prevSlug ? await getEpisodeDetails(prevSlug) : null;
+const nextEpisode = nextSlug ? await getEpisodeDetails(nextSlug) : null;
+---
+
+<Layout 
+    title={`${episode.title} | مرا به فکر وادار نکن`}
+    description={episode.description}
+>
+    <article class="container">
+        <div class="max-w-4xl mx-auto">
+            <!-- Breadcrumb -->
+            <nav class="flex items-center justify-between mb-8" transition:animate="fade">
+                <div class="flex items-center gap-2 text-sm text-gray-500">
+                    <Link href="/episodes" variant="muted">فصل‌ها</Link>
+                    <span class="text-gray-300">/</span>
+                    <span class="text-gray-900">{episode.title}</span>
+                </div>
+                <Link 
+                    href="/episodes"
+                    variant="muted"
+                    class="flex items-center gap-2 group text-sm"
+                >
+                    <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    بازگشت به فصل‌ها
+                </Link>
+            </nav>
+
+            <!-- Header -->
+            <header class="mb-12" transition:animate="fade">
+                <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                    <time datetime={episode.publishedAt}>{episode.publishedAt}</time>
+                    <span class="flex items-center gap-1.5">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        {episode.topicsCount} بخش
+                    </span>
+                </div>
+                <h1 class="text-4xl font-bold mb-4">{episode.title}</h1>
+                <p class="text-xl text-gray-600 mb-6">{episode.description}</p>
+                {episode.tags && episode.tags.length > 0 && (
+                    <div class="flex flex-wrap gap-2">
+                        {episode.tags.map(tag => (
+                            <span class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-sm font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
+                )}
+            </header>
+
+            <!-- Topics -->
+            <div class="space-y-8" transition:animate="fade">
+                <h2 class="text-2xl font-bold">مطالب این فصل</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {topics.map((topic) => (
+                        <Link 
+                            href={`/episodes/${number}/${topic.slug}`}
+                            class="block group"
+                        >
+                            <article class="h-full p-6 border border-gray-200 rounded-lg transition-all duration-200 hover:border-gray-300 hover:shadow-sm bg-white">
+                                <h3 class="text-xl font-bold mb-3 group-hover:text-gray-700">
+                                    {topic.title}
+                                </h3>
+                                <p class="text-gray-600 mb-4">
+                                    {topic.description}
+                                </p>
+                                <div class="flex items-center gap-2 text-sm text-gray-500">
+                                    {topic.isInteractive ? (
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            تعاملی
+                                        </span>
+                                    ) : (
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                            </svg>
+                                            ایستا
+                                        </span>
+                                    )}
+                                </div>
+                            </article>
+                        </Link>
+                    ))}
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav 
+                class="flex items-center justify-between mt-16 pt-8 border-t border-gray-100"
+                transition:animate="fade"
+            >
+                <div class="flex-1 flex items-center">
+                    {prevEpisode?.status === 'published' ? (
+                        <Link 
+                            href={`/episodes/${prevSlug}`} 
+                            variant="muted"
+                            class="flex items-center gap-2 group"
+                            transition:name={`episode-${prevSlug}`}
+                        >
+                            <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                            <div class="flex flex-col items-start">
+                                <span class="text-sm text-gray-500">فصل قبلی</span>
+                                <span>{prevEpisode.title}</span>
+                            </div>
+                        </Link>
+                    ) : (
+                        <div></div>
+                    )}
+                </div>
+                <div class="flex-1 flex items-center justify-end">
+                    {nextEpisode?.status === 'published' ? (
+                        <Link 
+                            href={`/episodes/${nextSlug}`} 
+                            variant="muted"
+                            class="flex items-center gap-2 group text-left"
+                            transition:name={`episode-${nextSlug}`}
+                        >
+                            <div class="flex flex-col items-end">
+                                <span class="text-sm text-gray-500">فصل بعدی</span>
+                                <span>{nextEpisode.title}</span>
+                            </div>
+                            <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </Link>
+                    ) : (
+                        <div></div>
+                    )}
+                </div>
+            </nav>
+        </div>
+    </article>
+</Layout> 

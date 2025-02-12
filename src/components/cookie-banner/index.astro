@@ -4,52 +4,121 @@ import Link from '../ui/link.astro';
 ---
 
 <div
-    x-data="{ show: !localStorage.getItem('cookieConsent') }"
-    x-show="show"
-    x-transition:enter="transition ease-out duration-300"
-    x-transition:enter-start="opacity-0 translate-y-4"
-    x-transition:enter-end="opacity-100 translate-y-0"
-    x-transition:leave="transition ease-in duration-200"
-    x-transition:leave-start="opacity-100 translate-y-0"
-    x-transition:leave-end="opacity-0 translate-y-4"
-    class="fixed sm:bottom-4 sm:left-4 sm:max-w-sm w-full sm:w-auto left-0 bottom-0 p-4 bg-white border-t sm:border border-gray-200 sm:rounded-lg shadow-lg z-50 text-sm"
+    id="cookie-banner"
+    class="fixed sm:bottom-4 sm:left-4 sm:max-w-sm w-full sm:w-auto left-0 bottom-0 p-4 bg-white border-t sm:border border-gray-200 sm:rounded-lg shadow-lg z-50 text-sm hidden transition-all duration-300"
     role="dialog"
     aria-labelledby="cookie-notice"
 >
-<div class="flex-1 space-y-3">
-    <div>
-        <p id="cookie-notice" class="text-gray-900 font-medium">
-            استفاده از کوکی‌ها
-        </p>
-        <p class="text-gray-600 mt-1">
-            ما از کوکی‌ها برای بهبود تجربه‌ی شما و تحلیل نحوه‌ی استفاده از وبسایت استفاده می‌کنیم.
-            <Link 
-                href="/privacy" 
-                variant="underline" 
-                size="sm" 
-                class="inline-flex"
-                aria-label="مشاهده سیاست حریم خصوصی و جزئیات استفاده از کوکی‌ها"
+    <div class="flex-1 space-y-3">
+        <div>
+            <p id="cookie-notice" class="text-gray-900 font-medium">
+                استفاده از کوکی‌ها
+            </p>
+            <p class="text-gray-600 mt-1">
+                ما از کوکی‌ها برای بهبود تجربه‌ی شما و تحلیل نحوه‌ی استفاده از وبسایت استفاده می‌کنیم.
+                <Link 
+                    href="/privacy" 
+                    variant="underline" 
+                    size="sm" 
+                    class="inline-flex"
+                    aria-label="مشاهده سیاست حریم خصوصی و جزئیات استفاده از کوکی‌ها"
+                >
+                    جزئیات بیشتر
+                </Link>
+            </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <Button
+                size="sm"
+                id="accept-cookies"
             >
-                جزئیات بیشتر
-            </Link>
-        </p>
-    </div>
-    <div class="flex flex-wrap gap-2">
-        <Button
-            size="sm"
-            @click="localStorage.setItem('cookieConsent', 'true'); show = false"
-            aria-label="پذیرفتن استفاده از کوکی‌ها"
-        >
-            قبول می‌کنم
-        </Button>
-        <Button
-            size="sm"
-            variant="ghost"
-            @click="show = false"
-            aria-label="رد کردن استفاده از کوکی‌ها"
-        >
-            نمی‌پذیرم
-        </Button>
+                قبول می‌کنم
+            </Button>
+            <Button
+                size="sm"
+                variant="ghost"
+                id="decline-cookies"
+            >
+                نمی‌پذیرم
+            </Button>
+        </div>
     </div>
 </div>
-</div> 
+
+<script>
+    function showBanner() {
+        const banner = document.getElementById('cookie-banner');
+        if (banner) {
+            banner.classList.remove('hidden');
+            banner.classList.add('opacity-100', 'translate-y-0');
+            banner.classList.remove('opacity-0', 'translate-y-4');
+        }
+    }
+
+    function hideBanner() {
+        const banner = document.getElementById('cookie-banner');
+        if (banner) {
+            banner.classList.add('opacity-0', 'translate-y-4');
+            banner.classList.remove('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                banner.classList.add('hidden');
+            }, 300);
+        }
+    }
+
+    function initCookieBanner() {
+        const banner = document.getElementById('cookie-banner');
+        const acceptBtn = document.getElementById('accept-cookies');
+        const declineBtn = document.getElementById('decline-cookies');
+
+        // Check if we already have consent
+        const consent = localStorage.getItem('cookieConsent');
+        if (consent === null) {
+            // Only show if we haven't made a choice yet
+            showBanner();
+        }
+
+        function accept() {
+            localStorage.setItem('cookieConsent', 'accepted');
+            hideBanner();
+            window.dispatchEvent(new Event('cookie-consent-changed'));
+        }
+
+        function decline() {
+            localStorage.setItem('cookieConsent', 'declined');
+            hideBanner();
+            window.dispatchEvent(new Event('cookie-consent-changed'));
+        }
+
+        acceptBtn?.addEventListener('click', accept);
+        declineBtn?.addEventListener('click', decline);
+    }
+
+    // Run on initial page load
+    initCookieBanner();
+
+    // Run again after page transitions in case of view transitions
+    document.addEventListener('astro:page-load', initCookieBanner);
+</script>
+
+<script>
+    function handleConsentChange() {
+        const consent = localStorage.getItem('cookieConsent');
+        if (consent === 'accepted') {
+            console.log('Cookies accepted - initializing features');
+            // Example: initializeAnalytics();
+        } else if (consent === 'declined') {
+            console.log('Cookies declined - cleaning up');
+            // Example: cleanupAnalytics();
+        }
+    }
+
+    // Run on initial page load
+    handleConsentChange();
+
+    // Listen for changes
+    window.addEventListener('cookie-consent-changed', handleConsentChange);
+
+    // Run again after page transitions
+    document.addEventListener('astro:page-load', handleConsentChange);
+</script> 

@@ -5,6 +5,7 @@ interface Props {
     class?: string;
     type?: 'button' | 'submit' | 'reset';
     href?: string;
+    id?: string;
 }
 
 const {
@@ -13,6 +14,7 @@ const {
     class: className,
     type = 'button',
     href,
+    id,
     ...rest
 } = Astro.props;
 
@@ -37,6 +39,7 @@ const Element = href ? 'a' : 'button';
 <Element
     href={href}
     type={!href ? type : undefined}
+    id={id}
     class:list={[
         baseStyles,
         variants[variant],

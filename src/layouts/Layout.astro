@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { SEO } from 'astro-seo';
+import { ClientRouter } from 'astro:transitions';
 import Header from '../components/header/index.astro';
 import Footer from '../components/footer/index.astro';
 import CookieBanner from '../components/cookie-banner/index.astro';
@@ -12,8 +13,8 @@ interface Props {
 }
 
 const {
-	title = "نذار فکر کنم!",
-	description = "آموزش بصری کتاب «نذار فکر کنم» به زبان ساده",
+	title = "مرا به فکر وادار نکن",
+	description = "آموزش بصری کتاب «مرا به فکر وادار نکن» به زبان ساده",
 	image = "/favicon.svg"
 } = Astro.props;
 ---
@@ -25,6 +26,7 @@ const {
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
+		<ClientRouter fallback="swap" />
 		<SEO
 			title={title}
 			description={description}
@@ -60,11 +62,16 @@ const {
 		/>
 	</head>
 	<body class="app-wrapper w-full h-full min-h-svh flex flex-col">
-		<Header/>
-		<main class="py-6 app flex-grow flex flex-col items-center">
-			<slot />
+		<Header transition:persist transition:name="header" />
+		<main 
+			class="py-6 app flex-grow flex flex-col items-center"
+			transition:animate="slide"
+		>
+			<div transition:animate="fade">
+				<slot />
+			</div>
 		</main>
-		<Footer/>
-		<CookieBanner />
+		<Footer transition:persist transition:name="footer" />
+		<CookieBanner transition:persist transition:name="cookie-banner" />
 	</body>
 </html>

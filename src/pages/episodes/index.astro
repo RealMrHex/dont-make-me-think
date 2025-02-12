@@ -1,0 +1,31 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import EpisodeCard from '../../components/episode/card.astro';
+import { getEpisodesOrder, getEpisodeDetails } from '../../utils/content';
+
+const slugs = await getEpisodesOrder();
+const episodes = (await Promise.all(
+    slugs.map(async (slug) => await getEpisodeDetails(slug))
+)).filter((episode): episode is NonNullable<typeof episode> => episode !== null);
+---
+
+<Layout 
+    title="فصل‌ها | مرا به فکر وادار نکن"
+    description="فصل‌های کتاب مرا به فکر وادار نکن"
+>
+    <div class="container">
+        <header class="text-center mb-16" transition:animate="fade">
+            <h1 class="text-4xl font-bold mb-4">فصل‌های کتاب</h1>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                در این بخش می‌توانید تمام فصل‌های کتاب را مطالعه کنید.
+                هر فصل شامل مثال‌های کاربردی و تمرین‌های عملی است.
+            </p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" transition:animate="fade">
+            {episodes.map((episode) => (
+                <EpisodeCard episode={episode} />
+            ))}
+        </div>
+    </div>
+</Layout> 
